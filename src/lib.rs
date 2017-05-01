@@ -84,6 +84,11 @@ pub fn inspect(val: VALUE) -> String {
     unsafe { CheckedValue::<String>::new(sys::rb_inspect(val)).to_rust() }
 }
 
+pub fn invalid(val: VALUE, expected: &str) -> String {
+    let val = unsafe { CheckedValue::<String>::new(sys::rb_inspect(val)) };
+    format!("Expected {}, got {}", expected, val.to_rust())
+}
+
 pub type Metadata = ::VALUE;
 
 #[derive(Copy, Clone, Debug)]
