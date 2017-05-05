@@ -29,8 +29,10 @@ impl<'a> Value<'a> {
         Type::of(self)
     }
 
-    pub fn to_rust<T>(&self) -> T where Value<'a>: UncheckedValue<T>, CheckedValue<'a, T>: ToRust<T> {
-        self.to_checked().unwrap().to_rust()
+    pub fn to_rust<T>(&self) -> T
+        where Value<'a>: UncheckedValue<T>
+    {
+        <Self as UncheckedValue<T>>::to_checked(*self).unwrap().to_rust()
     }
 }
 

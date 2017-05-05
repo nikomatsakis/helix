@@ -3,8 +3,11 @@ use sys::{VALUE, Qnil};
 use super::{UncheckedValue, CheckResult, CheckedValue, ToRust, ToRuby};
 use ruby::Value;
 
-impl<'a, T> UncheckedValue<Option<T>> for Value<'a> where Value<'a>: UncheckedValue<T>, CheckedValue<'a, T>: ToRust<T> {
-    type ToRust = Option<Box<ToRust<T>>>;
+impl<'a, T, U> UncheckedValue<Option<T>> for Value<'a>
+    where Value<'a>: UncheckedValue<T, ToRust=U>,
+          U: ToRust<T>,
+{
+    type ToRust = Option<U>;
 
     fn to_checked(self) -> CheckResult<Self::ToRust> {
         if unsafe { self.inner() } == unsafe { Qnil } {
@@ -13,16 +16,16 @@ impl<'a, T> UncheckedValue<Option<T>> for Value<'a> where Value<'a>: UncheckedVa
             let val = UncheckedValue::<T>::to_checked(self);
             match val {
                 // TODO: This transmute is caused by a compiler issue I think?
-                Ok(v) => Ok(Some(Box::new(v) as Box<ToRust<T>>)),
+                Ok(v) => Ok(Some(v)),
                 Err(e) => Err(e)
             }
         }
     }
 }
 
-impl<'a, T> ToRust<Option<T>> for Option<Box<ToRust<T>>> where CheckedValue<'a, T>: ToRust<T> {
+impl<'a, T, U> ToRust<Option<T>> for Option<U> where U: ToRust<T> {
     fn to_rust(self) -> Option<T> {
-        self.map(|val| val.to_rust())
+        self.map(|t| t.to_rust())
     }
 }
 
